@@ -20,6 +20,14 @@
 /* USER CODE BEGIN Includes */
 #include "main.h"
 #include <time.h>
+#include <signal.h>
+#include "kinet_config.h"
+
+bool ctrl_c_pressed=false;
+
+void ctrlc(int){
+    ctrl_c_pressed = true;
+}
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,14 +56,8 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#include <signal.h>
 
-// 可视化
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb_show(new pcl::PointCloud<pcl::PointXYZRGB>);
 pthread_mutex_t mutex_show = PTHREAD_MUTEX_INITIALIZER; // 互斥锁
-
-pthread_t id_thread_show;
-void* thread_show(void *arg);
 
 /* USER CODE END 0 *//**
   * @brief  The application entry point.
@@ -63,21 +65,28 @@ void* thread_show(void *arg);
   */
 int main()
 {
+    /*ctrl c 中断*/
+    signal(SIGINT, ctrlc);
     /* Initialize all configured peripherals */
     // KINET_BASE* KINET_BASE_Ptr_1= nullptr;
     /* USER CODE BEGIN Init */
     KINECT_BASE kinta;
     kinta.init();
     kinta.start_Capture();
-    //waitKey(0);
-    /* USER CODE END Init */
 
-    /* USER CODE BEGIN 1 */
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("Viewer_PCL"));
 
-    /* USER CODE END 1 */
+    //设置默认的坐标系
+    viewer->addCoordinateSystem(1.0);
+    //设置固定的元素。红色是X轴，绿色是Y轴，蓝色是Z
+    viewer->addLine(pcl::PointXYZ(0, 0, 0), pcl::PointXYZ(10, 0, 0), "x");
+    viewer->addLine(pcl::PointXYZ(0, 0, 0), pcl::PointXYZ(0, 5, 0), "y");
+    viewer->addLine(pcl::PointXYZ(0, 0, 0), pcl::PointXYZ(0, 0, 2), "z");
 
-    /* Infinite loop */
+
     while (1){
+        if(ctrl_c_pressed == true)
+            break;
         /* USER CODE BEGIN WHILE */
 
         std::vector<Mat> pictures = kinta.getImg();
@@ -87,19 +96,20 @@ int main()
         if(infraredImage_ocv.cols * infraredImage_ocv.rows != 0) imshow("Ir",infraredImage_ocv);
         printf("123\n");
 
-//        waitKey(10);
+        waitKey(20);
 
-        waitKey(30);
-        pthread_mutex_lock(&mutex_show);
+        PointCloud<PointXYZRGB>::Ptr cloud = kinta.getPointXYZRGB();
 
-        pthread_mutex_unlock(&mutex_show);
-        /* USER CODE END WHILE */
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr res_cloud_rgb_show(new pcl::PointCloud<pcl::PointXYZRGB>);
+
+        viewer->addPointCloud(cloud, "cloud");
+        viewer->spinOnce(3);
+        viewer->removePointCloud("cloud");
     }
 
     kinta.close();
-    /* USER CODE BEGIN 2 */
+
     return 0;
-    /* USER CODE END 2 */
 }
 
 
@@ -107,15 +117,6 @@ int main()
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
-void Error_Handler(void)
-{
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
-    while (1)
-    {
-    }
-    /* USER CODE END Error_Handler_Debug */
-}
 
 #ifdef  USE_FULL_ASSERT
 /**

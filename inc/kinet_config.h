@@ -30,7 +30,6 @@ private:
     k4a::calibration calibration;
     k4a::transformation transformation;
 
-
     bool Thread_Capture_Working = false;
     struct RAW_KINECT_DATA_
     {
@@ -38,68 +37,27 @@ private:
         k4a::image colorImage_k4a; // 彩色图片
         k4a::image depthImage_k4a; // 深度突破
         k4a::image infraredImage_k4a; // 红外图片
-        bool Used_In_Img = true; // 是否被获取图片使用过
-        bool Used_In_FastPointXYZ = true; // 是否被FastPointXYZ使用过
-        bool Used_In_PointXYZ = true; // 是否被PointXYZ使用过
-        bool Used_In_PointXYZRGB = true; // 是否被PointXYZRGB使用过
     }Raw_Kinect_Data_;
 
     bool kill_thread_capture = false;
-    pthread_t id_thread_capture;
-    static void* thread_capture(void *arg); // 捕获线程
 
-    enum getType{
-        Img,
-        FastPointXYZ,
-        PointXYZ,
-        PointXYZRGB
-    };
 public:
-    void init();
     /*初始化KinectAzureDK相机*/
-
-
-
-
-// 相机拍摄的原始的数据
-    void KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, getType type);
-
-/*计算时间差*/
-    double cal_time(timeval start_time, timeval end_time);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr getPointXYZRGB(size_t timeout_ms=100);
+    void init();
 
     void start_Capture();
-    void close(); // 关闭KinectAzureDK相机
+
+    /*相机拍摄的原始的数据*/
+    void KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms);
+
     //将相机原始图片转化为opencv 和 pcl格式的图片
     std::vector<cv::Mat> getImg (uint8_t timeout_ms=100);
 
+    /*获取点云*/
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr getPointXYZRGB(size_t timeout_ms=100);
+
+    void close(); // 关闭KinectAzureDK相机
+
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif //RUN_KINET_CONFIG_H

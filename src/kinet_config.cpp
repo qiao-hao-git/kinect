@@ -105,7 +105,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr KINECT_BASE::getPointXYZRGB(size_t timeou
 
     // 获取相机原始数据
     k4a::image colorImage_k4a = nullptr, depthImage_k4a = nullptr, infraredImage_k4a = nullptr;
-    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms, PointXYZRGB);
+    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms);
 
     if(colorImage_k4a == nullptr || depthImage_k4a == nullptr)
     {
@@ -153,18 +153,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr KINECT_BASE::getPointXYZRGB(size_t timeou
     return cloud;
 }
 
-
-/*计算时间差*/
-double cal_time(timeval start_time, timeval end_time){
-    double diff_time = 1e3*(start_time.tv_sec - end_time.tv_sec) + (start_time.tv_usec - end_time.tv_usec)/1000.0;
-    if(diff_time < 0){
-        diff_time = -diff_time;
-    }
-    return diff_time;
-}
-
-
-void KINECT_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, getType type)
+void KINECT_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms)
 {
     /*清空变量*/
     colorImage_k4a = depthImage_k4a = infraredImage_k4a = nullptr;
@@ -198,7 +187,7 @@ std::vector<cv::Mat> KINECT_BASE::getImg(uint8_t timeout_ms)
 
     //获取相机原始数据
     k4a::image colorImage_k4a = nullptr, depthImage_k4a = nullptr, infraredImage_k4a = nullptr;
-    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms, Img);
+    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms);
 
     /*数据格式转换*/
     if(colorImage_k4a != nullptr){
@@ -221,10 +210,6 @@ std::vector<cv::Mat> KINECT_BASE::getImg(uint8_t timeout_ms)
     pictures.push_back(depthImage_ocv);
     pictures.push_back(infraredImage_ocv);
 
-//    imshow("RGB",colorImage_ocv);
-    // imshow("Depth",depthImage_ocv);
-    //imshow("Ir",infraredImage_ocv);
-
     return pictures;
 }
 
@@ -243,5 +228,4 @@ void KINECT_BASE::close()
 
     }
 }
-/*获取点云*/
-/* USER CODE END Includes */
+
