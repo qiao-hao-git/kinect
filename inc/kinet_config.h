@@ -24,7 +24,7 @@
 
 
 
-class KINET_BASE{
+class KINECT_BASE{
 private:
     k4a::device Kinect;
     k4a::calibration calibration;
@@ -47,8 +47,7 @@ private:
     bool kill_thread_capture = false;
     static void* thread_capture(void *arg); // 捕获线程
 
-    enum getType
-    {
+    enum getType{
         Img,
         FastPointXYZ,
         PointXYZ,
