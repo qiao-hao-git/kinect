@@ -20,8 +20,8 @@
 /* USER CODE BEGIN Includes */
 #include "kinet_config.h"
 pthread_t id_thread_capture;
-static KINET_BASE* KINET_BASE_Ptr_ = nullptr;
-void KINET_BASE::init() {
+static KINECT_BASE* KINET_BASE_Ptr_ = nullptr;
+void KINECT_BASE::init() {
 
 
 
@@ -84,7 +84,7 @@ void KINET_BASE::init() {
     return ;
 }
 
-void KINET_BASE::start_Capture()
+void KINECT_BASE::start_Capture()
 {
     if(Thread_Capture_Working)
     {
@@ -109,7 +109,7 @@ double cal_time(timeval start_time, timeval end_time){
 }
 
 
-void KINET_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, getType type)
+void KINECT_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, getType type)
 {
     /*清空变量*/
     colorImage_k4a = depthImage_k4a = infraredImage_k4a = nullptr;
@@ -184,7 +184,7 @@ void KINET_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::i
     return ;
 }
 
-std::vector<cv::Mat> KINET_BASE::getImg(uint8_t timeout_ms)
+std::vector<cv::Mat> KINECT_BASE::getImg(uint8_t timeout_ms)
 {
     cv::Mat colorImage_ocv, depthImage_ocv, infraredImage_ocv;
 
@@ -221,7 +221,7 @@ std::vector<cv::Mat> KINET_BASE::getImg(uint8_t timeout_ms)
 }
 
 /*关闭相机*/
-void KINET_BASE::close()
+void KINECT_BASE::close()
 {
     if(Kinect){
         if(Thread_Capture_Working){

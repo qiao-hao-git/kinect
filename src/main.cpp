@@ -57,6 +57,9 @@ int main()
 {
     /* Initialize all configured peripherals */
     /* USER CODE BEGIN Init */
+    KINECT_BASE k4a;
+    k4a.init();
+    k4a.start_Capture();
 
 
     /* USER CODE END Init */
