@@ -20,8 +20,8 @@
 /* USER CODE BEGIN Includes */
 #include "kinet_config.h"
 pthread_t id_thread_capture;
-static KINET_BASE* KINET_BASE_Ptr_ = nullptr;
-void KINET_BASE:: init() {
+static KINECT_BASE* KINET_BASE_Ptr_ = nullptr;
+void KINECT_BASE:: init() {
 
 
 
@@ -84,7 +84,7 @@ void KINET_BASE:: init() {
     return ;
 }
 
-void KINET_BASE::start_Capture()
+void KINECT_BASE::start_Capture()
 {
 
     if(!Thread_Capture_Working)
@@ -99,7 +99,7 @@ void KINET_BASE::start_Capture()
 }
 
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr KINET_BASE::getPointXYZRGB(size_t timeout_ms)
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr KINECT_BASE::getPointXYZRGB(size_t timeout_ms)
 {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 
@@ -164,58 +164,11 @@ double cal_time(timeval start_time, timeval end_time){
 }
 
 
-void KINET_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, getType type)
+void KINECT_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, getType type)
 {
     /*清空变量*/
     colorImage_k4a = depthImage_k4a = infraredImage_k4a = nullptr;
 
-    /*检测捕获线程是否在工作*/
-    /*  if(Thread_Capture_Working){
-          timeval capture_start_time;
-  //        gettimeofday(&capture_start_time, NULL);
-          while(1){
-              bool *Used = nullptr;
-              switch (type){
-                  case Img:
-                      Used = &(Raw_Kinect_Data_.Used_In_Img);
-                      break;
-
-                  case FastPointXYZ:
-                      Used = &(Raw_Kinect_Data_.Used_In_FastPointXYZ);
-                      break;
-
-                  case PointXYZ:
-                      Used = &(Raw_Kinect_Data_.Used_In_PointXYZ);
-                      break;
-
-                  case PointXYZRGB:
-                      Used = &(Raw_Kinect_Data_.Used_In_PointXYZRGB);
-                      break;
-
-                  default:
-                      break;
-              }*/
-
-    /*检测到新图片
-    if(*Used == false){
-        pthread_mutex_lock(&Raw_Kinect_Data_.mutex_k4a_image_t);
-        colorImage_k4a = k4a::image(Raw_Kinect_Data_.colorImage_k4a);
-        depthImage_k4a = k4a::image(Raw_Kinect_Data_.depthImage_k4a);
-        infraredImage_k4a = k4a::image(Raw_Kinect_Data_.infraredImage_k4a);
-        *Used = true;
-        pthread_mutex_unlock(&Raw_Kinect_Data_.mutex_k4a_image_t);
-        return ;
-    }
-
-
-    timeval capture_now_time;
-//            gettimeofday(&capture_now_time, NULL);
-  if(cal_time(capture_start_time, capture_now_time) > timeout_ms) {
-      printf("Grabber Time Out!\n");
-      return;
-  }
-}
-}else*/
     //如果捕获线程没在工作，则自己调用捕获
     k4a::capture capture;
 
@@ -239,7 +192,7 @@ void KINET_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::i
     return ;
 }
 
-std::vector<cv::Mat> KINET_BASE::getImg(uint8_t timeout_ms)
+std::vector<cv::Mat> KINECT_BASE::getImg(uint8_t timeout_ms)
 {
     cv::Mat colorImage_ocv, depthImage_ocv, infraredImage_ocv;
 
@@ -276,7 +229,7 @@ std::vector<cv::Mat> KINET_BASE::getImg(uint8_t timeout_ms)
 }
 
 /*关闭相机*/
-void KINET_BASE::close()
+void KINECT_BASE::close()
 {
     if(Kinect){
         if(Thread_Capture_Working){

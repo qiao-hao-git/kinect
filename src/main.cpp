@@ -66,7 +66,7 @@ int main()
     /* Initialize all configured peripherals */
     // KINET_BASE* KINET_BASE_Ptr_1= nullptr;
     /* USER CODE BEGIN Init */
-    KINET_BASE kinta;
+    KINECT_BASE kinta;
     kinta.init();
     kinta.start_Capture();
     //waitKey(0);
@@ -87,7 +87,7 @@ int main()
         if(infraredImage_ocv.cols * infraredImage_ocv.rows != 0) imshow("Ir",infraredImage_ocv);
         printf("123\n");
 
-        waitKey(10);
+//        waitKey(10);
 
         waitKey(30);
         pthread_mutex_lock(&mutex_show);
