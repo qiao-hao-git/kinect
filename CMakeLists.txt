@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS "-lstdc++ -pthread" )
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall")
+set(CMAKE_CXX_FLAGS_RELEASE  "-std=c++17 -O3")
 
 find_package(k4a REQUIRED)
 find_package(OpenCV REQUIRED)

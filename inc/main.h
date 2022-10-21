@@ -24,11 +24,26 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <iostream>
+#include <opencv2/opencv.hpp>
+
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/cloud_viewer.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include <pthread.h>
+
+#include <sys/time.h>
+#include <unistd.h>
+
+#include <iostream>
 
 #include "kinet_config.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 using namespace cv;
+using namespace std;
+using namespace pcl;
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "main.h"
+#include <time.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +48,14 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-bool kill_thread_capture = false;
+#include <signal.h>
+
+// 可视化
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb_show(new pcl::PointCloud<pcl::PointXYZRGB>);
+pthread_mutex_t mutex_show = PTHREAD_MUTEX_INITIALIZER; // 互斥锁
+
+pthread_t id_thread_show;
+void* thread_show(void *arg);
 
 /* USER CODE END 0 *//**
   * @brief  The application entry point.
@@ -56,12 +64,12 @@ bool kill_thread_capture = false;
 int main()
 {
     /* Initialize all configured peripherals */
+    // KINET_BASE* KINET_BASE_Ptr_1= nullptr;
     /* USER CODE BEGIN Init */
-    KINECT_BASE k4a;
-    k4a.init();
-    k4a.start_Capture();
-
-
+    KINET_BASE kinta;
+    kinta.init();
+    kinta.start_Capture();
+    //waitKey(0);
     /* USER CODE END Init */
 
     /* USER CODE BEGIN 1 */
@@ -72,8 +80,23 @@ int main()
     while (1){
         /* USER CODE BEGIN WHILE */
 
+        std::vector<Mat> pictures = kinta.getImg();
+        cv::Mat colorImage_ocv = pictures[0], depthImage_ocv = pictures[1], infraredImage_ocv = pictures[2];
+        if(colorImage_ocv.cols * colorImage_ocv.rows != 0) imshow("RGB",colorImage_ocv);
+        if(depthImage_ocv.cols * depthImage_ocv.rows != 0) imshow("Depth",depthImage_ocv);
+        if(infraredImage_ocv.cols * infraredImage_ocv.rows != 0) imshow("Ir",infraredImage_ocv);
+        printf("123\n");
+
+        waitKey(10);
+
+        waitKey(30);
+        pthread_mutex_lock(&mutex_show);
+
+        pthread_mutex_unlock(&mutex_show);
         /* USER CODE END WHILE */
     }
+
+    kinta.close();
     /* USER CODE BEGIN 2 */
     return 0;
     /* USER CODE END 2 */

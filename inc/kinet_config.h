@@ -45,6 +45,7 @@ private:
     }Raw_Kinect_Data_;
 
     bool kill_thread_capture = false;
+    pthread_t id_thread_capture;
     static void* thread_capture(void *arg); // 捕获线程
 
     enum getType{
@@ -65,7 +66,7 @@ public:
 
 /*计算时间差*/
     double cal_time(timeval start_time, timeval end_time);
-
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr getPointXYZRGB(size_t timeout_ms=100);
 
     void start_Capture();
     void close(); // 关闭KinectAzureDK相机
