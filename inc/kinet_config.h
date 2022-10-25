@@ -17,13 +17,6 @@
 #include <unistd.h>
 #include <iostream>
 
-//using namespace std;
-//using namespace cv;
-//using namespace pcl;
-
-
-
-
 class KINECT_BASE{
 private:
     k4a::device Kinect;
@@ -35,12 +28,20 @@ private:
     {
         pthread_mutex_t mutex_k4a_image_t = PTHREAD_MUTEX_INITIALIZER; // 互斥锁
         k4a::image colorImage_k4a; // 彩色图片
-        k4a::image depthImage_k4a; // 深度突破
+        k4a::image depthImage_k4a; // 深度图片
         k4a::image infraredImage_k4a; // 红外图片
+        bool Used_Img = true; // 是否被Img使用
+        bool Used_PointXYZRGB = true; // 是否被PointXYZRGB使用
     }Raw_Kinect_Data_;
 
     bool kill_thread_capture = false;
+    pthread_t id_thread_capture;
 
+
+    enum Type{
+        Img,
+        PointXYZRGB
+    };
 public:
     /*初始化KinectAzureDK相机*/
     void init();
@@ -48,7 +49,7 @@ public:
     void start_Capture();
 
     /*相机拍摄的原始的数据*/
-    void KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms);
+    void KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, Type type);
 
     //将相机原始图片转化为opencv 和 pcl格式的图片
     std::vector<cv::Mat> getImg (uint8_t timeout_ms=100);
@@ -57,6 +58,12 @@ public:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr getPointXYZRGB(size_t timeout_ms=100);
 
     void close(); // 关闭KinectAzureDK相机
+
+    /*计算时间差*/
+    double get_time_diff(struct timeval t1, struct timeval t2);
+
+    /*捕获线程*/
+    static void* thread_capture(void *arg);
 
 };
 

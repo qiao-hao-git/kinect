@@ -28,6 +28,9 @@ bool ctrl_c_pressed=false;
 void ctrlc(int){
     ctrl_c_pressed = true;
 }
+
+pthread_mutex_t mutex_show = PTHREAD_MUTEX_INITIALIZER; // 互斥锁
+pthread_t id_thread_show;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,8 +59,6 @@ void ctrlc(int){
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-pthread_mutex_t mutex_show = PTHREAD_MUTEX_INITIALIZER; // 互斥锁
 
 /* USER CODE END 0 *//**
   * @brief  The application entry point.
@@ -89,7 +90,12 @@ int main()
             break;
         /* USER CODE BEGIN WHILE */
 
+        timeval t1, t2;
+        gettimeofday(&t1, NULL);
         std::vector<Mat> pictures = kinta.getImg();
+        gettimeofday(&t2, NULL);
+        double diff = (t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0;
+        cout << "getImg time: " << diff << "ms" << endl;
         cv::Mat colorImage_ocv = pictures[0], depthImage_ocv = pictures[1], infraredImage_ocv = pictures[2];
         if(colorImage_ocv.cols * colorImage_ocv.rows != 0) imshow("RGB",colorImage_ocv);
         if(depthImage_ocv.cols * depthImage_ocv.rows != 0) imshow("Depth",depthImage_ocv);
@@ -98,8 +104,12 @@ int main()
 
         waitKey(20);
 
+        timeval tt1, tt2;
+        gettimeofday(&tt1, NULL);
         PointCloud<PointXYZRGB>::Ptr cloud = kinta.getPointXYZRGB();
-
+        gettimeofday(&tt2, NULL);
+        double diff2 = (tt2.tv_sec - tt1.tv_sec) * 1000.0 + (tt2.tv_usec - tt1.tv_usec) / 1000.0;
+        cout << "getPointXYZRGB time: " << diff2 << "ms" << endl;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr res_cloud_rgb_show(new pcl::PointCloud<pcl::PointXYZRGB>);
 
         viewer->addPointCloud(cloud, "cloud");
@@ -116,7 +126,7 @@ int main()
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
-  */
+*/
 
 #ifdef  USE_FULL_ASSERT
 /**

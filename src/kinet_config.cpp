@@ -21,9 +21,8 @@
 #include "kinet_config.h"
 pthread_t id_thread_capture;
 static KINECT_BASE* KINET_BASE_Ptr_ = nullptr;
+
 void KINECT_BASE:: init() {
-
-
 
     /*查询设备数量*/
     uint32_t devices_count = k4a::device::get_installed_count();
@@ -84,17 +83,18 @@ void KINECT_BASE:: init() {
     return ;
 }
 
+
 void KINECT_BASE::start_Capture()
 {
 
-    if(!Thread_Capture_Working)
+    if(Thread_Capture_Working)
     {
         printf("Thread Capture Is Working!\n");
         return ;
     }
 
     Thread_Capture_Working = true;
-//    pthread_create(&id_thread_capture, NULL, thread_capture, NULL);
+    pthread_create(&id_thread_capture, NULL, thread_capture, NULL);
     return ;
 }
 
@@ -105,11 +105,11 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr KINECT_BASE::getPointXYZRGB(size_t timeou
 
     // 获取相机原始数据
     k4a::image colorImage_k4a = nullptr, depthImage_k4a = nullptr, infraredImage_k4a = nullptr;
-    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms);
+    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms, PointXYZRGB);
 
     if(colorImage_k4a == nullptr || depthImage_k4a == nullptr)
     {
-        printf("Grabber PointXYZ Failed!\n");
+        printf("Grabber PointXYZRGB Failed!\n");
         return cloud;
     }
 
@@ -153,32 +153,70 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr KINECT_BASE::getPointXYZRGB(size_t timeou
     return cloud;
 }
 
-void KINECT_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms)
+void KINECT_BASE::KinectAzureDK_Source_Grabber(k4a::image &colorImage_k4a, k4a::image &depthImage_k4a, k4a::image &infraredImage_k4a, uint8_t timeout_ms, Type type)
 {
     /*清空变量*/
     colorImage_k4a = depthImage_k4a = infraredImage_k4a = nullptr;
 
-    //如果捕获线程没在工作，则自己调用捕获
-    k4a::capture capture;
+    /*检测捕获线程是否在工作*/
+    if(Thread_Capture_Working){
+        timeval capture_start_time;
+        gettimeofday(&capture_start_time, NULL);
+        while(1){
+            bool *used = nullptr;
+            switch(type){
+                case Img:
+                    used = &(Raw_Kinect_Data_.Used_Img);
+                    break;
+                case PointXYZRGB:
+                    used = &(Raw_Kinect_Data_.Used_PointXYZRGB);
+                    break;
+                default:
+                    break;
+            }
 
-    if(!Kinect.get_capture(&capture, std::chrono::milliseconds(timeout_ms))){
-        printf("KinectAzureDK Grabber Failed!\n");
-        return ;
+            /*检测到新图片*/
+            if(*used == false){
+                pthread_mutex_lock(&Raw_Kinect_Data_.mutex_k4a_image_t);
+                colorImage_k4a = Raw_Kinect_Data_.colorImage_k4a;
+                depthImage_k4a = Raw_Kinect_Data_.depthImage_k4a;
+                infraredImage_k4a = Raw_Kinect_Data_.infraredImage_k4a;
+                *used = true;
+                pthread_mutex_unlock(&Raw_Kinect_Data_.mutex_k4a_image_t);
+                return;
+            }
+            /*超时检测*/
+            timeval capture_end_time;
+            gettimeofday(&capture_end_time, NULL);
+            if(get_time_diff(capture_start_time, capture_end_time) > timeout_ms){
+                printf("Kinect Azure DK Grabber Timeout!\n");
+                return;
+            }
+        }
+
+    }else {
+        //如果捕获线程没在工作，则自己调用捕获
+        k4a::capture capture;
+
+        if (!Kinect.get_capture(&capture, std::chrono::milliseconds(timeout_ms))) {
+            printf("KinectAzureDK Grabber Failed!\n");
+            return;
+        }
+
+        colorImage_k4a = capture.get_color_image();
+        if (colorImage_k4a == nullptr)
+            printf("Failed To Get Color Image From Kinect!\n");
+
+        depthImage_k4a = capture.get_depth_image();
+        if (depthImage_k4a == nullptr)
+            printf("Failed To Get Depth Image From Kinect!\n");
+
+        infraredImage_k4a = capture.get_ir_image();
+        if (infraredImage_k4a == nullptr)
+            printf("Failed To Get IR Image From Kinect!\n");
+
+        return;
     }
-
-    colorImage_k4a = capture.get_color_image();
-    if(colorImage_k4a == nullptr)
-        printf("Failed To Get Color Image From Kinect!\n");
-
-    depthImage_k4a = capture.get_depth_image();
-    if(depthImage_k4a == nullptr)
-        printf("Failed To Get Depth Image From Kinect!\n");
-
-    infraredImage_k4a = capture.get_ir_image();
-    if(infraredImage_k4a == nullptr)
-        printf("Failed To Get IR Image From Kinect!\n");
-
-    return ;
 }
 
 std::vector<cv::Mat> KINECT_BASE::getImg(uint8_t timeout_ms)
@@ -187,7 +225,7 @@ std::vector<cv::Mat> KINECT_BASE::getImg(uint8_t timeout_ms)
 
     //获取相机原始数据
     k4a::image colorImage_k4a = nullptr, depthImage_k4a = nullptr, infraredImage_k4a = nullptr;
-    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms);
+    KinectAzureDK_Source_Grabber(colorImage_k4a, depthImage_k4a, infraredImage_k4a, timeout_ms, Img);
 
     /*数据格式转换*/
     if(colorImage_k4a != nullptr){
@@ -229,3 +267,37 @@ void KINECT_BASE::close()
     }
 }
 
+/*计算时间差*/
+double KINECT_BASE::get_time_diff(struct timeval start, struct timeval end)
+{
+    double diff = 0.0;
+    diff = (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_usec - start.tv_usec) / 1000.0;
+    if(diff < 0.0){
+        diff *= -1;
+    }
+    return diff;
+}
+
+void *KINECT_BASE::thread_capture(void *arg)
+{
+    while(1){
+        if(KINET_BASE_Ptr_->kill_thread_capture){
+            break;
+        }
+        k4a::capture capture;
+        if(!KINET_BASE_Ptr_->Kinect.get_capture(&capture, std::chrono::milliseconds(100))){
+            continue;
+        }
+        k4a::image colorImage_k4a = capture.get_color_image();
+        k4a::image depthImage_k4a = capture.get_depth_image();
+        k4a::image infraredImage_k4a = capture.get_ir_image();
+
+        pthread_mutex_lock(&KINET_BASE_Ptr_->Raw_Kinect_Data_.mutex_k4a_image_t);
+        KINET_BASE_Ptr_->Raw_Kinect_Data_.colorImage_k4a = k4a::image(colorImage_k4a);
+        KINET_BASE_Ptr_->Raw_Kinect_Data_.depthImage_k4a = k4a::image(depthImage_k4a);
+        KINET_BASE_Ptr_->Raw_Kinect_Data_.infraredImage_k4a = k4a::image(infraredImage_k4a);
+        KINET_BASE_Ptr_->Raw_Kinect_Data_.Used_Img = false;
+        KINET_BASE_Ptr_->Raw_Kinect_Data_.Used_PointXYZRGB = false;
+        pthread_mutex_unlock(&KINET_BASE_Ptr_->Raw_Kinect_Data_.mutex_k4a_image_t);
+    }
+}
